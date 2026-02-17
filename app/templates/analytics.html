@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% set title='Analytics' %}
+{% block content %}
+<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+  <div class="p-4 rounded-xl bg-white dark:bg-slate-800 shadow">Online <b>{{ summary.online_agents }}/{{ summary.total_agents }}</b></div>
+  <div class="p-4 rounded-xl bg-white dark:bg-slate-800 shadow">Deployments <b>{{ summary.deployments_24h }}</b></div>
+  <div class="p-4 rounded-xl bg-white dark:bg-slate-800 shadow">Error rate <b>{{ summary.error_rate }}</b></div>
+  <div class="p-4 rounded-xl bg-white dark:bg-slate-800 shadow">Latency 24h <b>{{ summary.avg_latency_24h }} ms</b></div>
+</div>
+<div class="grid lg:grid-cols-2 gap-4 mt-4">
+  <div class="p-4 rounded-xl bg-white dark:bg-slate-800 shadow"><canvas id="c1"></canvas></div>
+  <div class="p-4 rounded-xl bg-white dark:bg-slate-800 shadow"><canvas id="c2"></canvas></div>
+  <div class="p-4 rounded-xl bg-white dark:bg-slate-800 shadow"><canvas id="c3"></canvas></div>
+  <div class="p-4 rounded-xl bg-white dark:bg-slate-800 shadow"><canvas id="c4"></canvas></div>
+  <div class="p-4 rounded-xl bg-white dark:bg-slate-800 shadow lg:col-span-2"><canvas id="c5"></canvas></div>
+</div>
+<div class="mt-4 flex gap-2"><a href="/api/telemetry/export.csv?range=24h" class="px-3 py-2 rounded bg-emerald-600 text-white">Export CSV (24h)</a></div>
+<div class="mt-4 rounded-xl bg-white dark:bg-slate-800 shadow overflow-x-auto">
+<table class="min-w-full text-sm"><tr class="border-b"><th class="p-2">Time</th><th>Type</th><th>Details</th></tr>
+{% for e in events %}<tr class="border-b border-slate-200 dark:border-slate-700"><td class="p-2">{{ e.ts }}</td><td>{{ e.type }}</td><td>{{ e.details }}</td></tr>{% endfor %}
+</table></div>
+<script>
+async function draw(){
+ const traffic=await fetch('/api/metrics/traffic?range=1h').then(r=>r.json());
+ new Chart(c1,{type:'line',data:{labels:traffic.labels,datasets:[{label:'bytes_in',data:traffic.bytes_in},{label:'bytes_out',data:traffic.bytes_out}]}})
+ const lat=await fetch('/api/metrics/latency?range=1h').then(r=>r.json());
+ new Chart(c2,{type:'line',data:{labels:lat.labels,datasets:[{label:'latency',data:lat.latency}]}})
+ const actions=await fetch('/api/metrics/actions?range=24h').then(r=>r.json());
+ new Chart(c3,{type:'bar',data:{labels:actions.labels,datasets:[{data:actions.values,label:'actions'}]}})
+ const prof=await fetch('/api/metrics/profile_distribution?range=7d').then(r=>r.json());
+ new Chart(c4,{type:'pie',data:{labels:prof.labels,datasets:[{data:prof.values}]}})
+ const errors=await fetch('/api/metrics/top_errors?range=24h').then(r=>r.json());
+ new Chart(c5,{type:'bar',data:{labels:errors.labels,datasets:[{data:errors.values,label:'errors'}]}})
+}
+draw()
+</script>
+{% endblock %}

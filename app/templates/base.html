@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" x-data="layout()" x-init="init()" :class="theme">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <title>{{ title or 'Demo Panel' }}</title>
+</head>
+<body class="bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+<div class="min-h-screen flex">
+  <aside class="w-64 hidden md:block bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 p-4">
+    <h1 class="text-xl font-bold mb-6">Sim Control</h1>
+    <nav class="space-y-2 text-sm">
+      <a class="block p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-700" href="/dashboard">Dashboard</a>
+      <a class="block p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-700" href="/agents">Agents</a>
+      <a class="block p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-700" href="/profiles">Profiles</a>
+      <a class="block p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-700" href="/audit">Audit</a>
+      <a class="block p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-700" href="/analytics">Analytics</a>
+      <a class="block p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-700" href="/tests">Tests</a>
+    </nav>
+  </aside>
+  <main class="flex-1">
+    <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 py-3 flex items-center justify-between sticky top-0">
+      <div class="font-semibold">{{ title or 'Demo Panel' }}</div>
+      <div class="flex gap-3 items-center">
+        <span class="text-xs px-2 py-1 rounded bg-indigo-100 dark:bg-indigo-900">{{ user.username }} ({{ user.role }})</span>
+        <button @click="toggleTheme" class="text-xs px-3 py-1 rounded bg-slate-200 dark:bg-slate-700">Theme</button>
+      </div>
+    </header>
+    <section class="p-4">{% block content %}{% endblock %}</section>
+  </main>
+</div>
+<script>
+function layout(){
+  return {
+    theme:'light',
+    init(){ this.theme = localStorage.getItem('theme') || 'light'; document.documentElement.classList.toggle('dark', this.theme==='dark');},
+    toggleTheme(){ this.theme = this.theme==='dark'?'light':'dark'; localStorage.setItem('theme', this.theme); document.documentElement.classList.toggle('dark', this.theme==='dark'); }
+  }
+}
+function toast(msg, bad=false){
+  const t=document.createElement('div');
+  t.className=`fixed right-4 top-4 px-4 py-2 rounded text-white z-50 ${bad?'bg-red-500':'bg-emerald-600'}`;
+  t.innerText=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2200);
+}
+</script>
+</body>
+</html>
