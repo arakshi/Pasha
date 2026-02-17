@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% set title='Profiles' %}
+{% block content %}
+<form class="flex gap-2 mb-3" method="get">
+  <input name="search" placeholder="Search profile" class="p-2 rounded border" />
+  <select name="sort" class="p-2 rounded border"><option value="name">Sort by name</option><option value="latency">Sort by latency factor</option></select>
+  <button class="px-3 rounded bg-indigo-600 text-white">Apply</button>
+</form>
+<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+  {% for p in profiles %}
+  <div class="p-4 rounded-xl bg-white dark:bg-slate-800 shadow">
+    <div class="font-semibold">{{ p.name }}</div>
+    <div class="text-sm mt-1">{{ p.description }}</div>
+    <div class="text-xs mt-2">lat={{ p.latency_factor }}, err={{ p.error_factor }}, thr={{ p.throughput_factor }}</div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
