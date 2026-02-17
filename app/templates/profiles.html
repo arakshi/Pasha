@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<form class="flex flex-wrap gap-2 mb-3" method="get">
+  <input name="search" value="{{ search }}" placeholder="Поиск профиля" class="p-2 rounded-lg border" />
+  <select name="sort" class="p-2 rounded-lg border"><option value="name" {% if sort=='name' %}selected{% endif %}>По имени</option><option value="latency" {% if sort=='latency' %}selected{% endif %}>По задержке</option></select>
+  <button class="px-3 rounded-lg bg-indigo-600 text-white">Применить</button>
+</form>
+<div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+  {% for p in profiles %}
+  <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800">
+    <div class="font-semibold">{{ p.name }}</div>
+    <div class="text-sm mt-1 text-slate-600 dark:text-slate-300">{{ p.description }}</div>
+    <div class="text-xs mt-3">lat={{ p.latency_factor }} • err={{ p.error_factor }} • thr={{ p.throughput_factor }}</div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

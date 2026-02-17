@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="grid sm:grid-cols-3 gap-4 mb-4">
+  <div class="rounded-2xl bg-white dark:bg-slate-900 p-4 shadow-sm border border-slate-100 dark:border-slate-800"><div class="text-xs text-slate-500">Средняя длительность</div><div class="text-2xl font-semibold">{{ avg_duration }} мс</div></div>
+  <div class="rounded-2xl bg-white dark:bg-slate-900 p-4 shadow-sm border border-slate-100 dark:border-slate-800"><div class="text-xs text-slate-500">Ошибочные прогоны</div><div class="text-2xl font-semibold">{{ fails }}</div></div>
+  <div class="rounded-2xl bg-white dark:bg-slate-900 p-4 shadow-sm border border-slate-100 dark:border-slate-800"><div class="text-xs text-slate-500">Всего записей</div><div class="text-2xl font-semibold">{{ rows|length }}</div></div>
+</div>
+
+<div class="rounded-2xl bg-white dark:bg-slate-900 p-4 shadow-sm border border-slate-100 dark:border-slate-800"><div class="font-medium mb-2">Процент успешных прогонов по дням</div><canvas id="sr"></canvas></div>
+<div class="mt-4 overflow-x-auto rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800">
+<table class="min-w-full text-sm">
+<tr class="border-b border-slate-200 dark:border-slate-800"><th class="p-2 text-left">Время</th><th class="text-left">Прогон</th><th>Длительность</th><th class="text-left">Проверки</th><th>Статус</th></tr>
+{% for item in rows %}
+<tr class="border-b border-slate-100 dark:border-slate-800">
+  <td class="p-2">{{ item.row.ts }}</td>
+  <td>{{ item.row.run_name }}</td>
+  <td class="text-center">{{ item.row.duration_ms }} мс</td>
+  <td>
+    <ul class="text-xs py-2">
+      {% for check in item.checks %}
+      <li class="{% if 'FAIL' in check %}text-red-500{% else %}text-emerald-600{% endif %}">{{ check }}</li>
+      {% endfor %}
+    </ul>
+  </td>
+  <td class="text-center">{% if item.row.success %}<span class="px-2 py-1 rounded bg-emerald-100 text-emerald-700">УСПЕХ</span>{% else %}<span class="px-2 py-1 rounded bg-rose-100 text-rose-700">СБОЙ</span>{% endif %}</td>
+</tr>
+{% endfor %}
+</table></div>
+<script>
+const sr={{ success_rate_json|safe }};
+new Chart(document.getElementById('sr'),{type:'line',data:{labels:sr.map(x=>x.day),datasets:[{label:'Успех, %',data:sr.map(x=>x.rate),borderColor:'#4f46e5'}]}})
+</script>
+{% endblock %}

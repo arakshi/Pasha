@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="grid sm:grid-cols-2 xl:grid-cols-5 gap-4">
+  <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800"><div class="text-xs text-slate-500">Онлайн агенты</div><div class="text-2xl font-semibold">{{ summary.online_agents }}/{{ summary.total_agents }}</div></div>
+  <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800"><div class="text-xs text-slate-500">Развёртывания 24ч</div><div class="text-2xl font-semibold">{{ summary.deployments_24h }}</div></div>
+  <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800"><div class="text-xs text-slate-500">Средняя задержка 1ч</div><div class="text-2xl font-semibold">{{ summary.avg_latency_1h }} мс</div></div>
+  <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800"><div class="text-xs text-slate-500">Трафик 24ч</div><div class="text-2xl font-semibold">{{ summary.traffic_24h_gb }} ГБ</div></div>
+  <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800"><div class="text-xs text-slate-500">Индекс стабильности</div><div class="text-2xl font-semibold">{{ summary.stability_index }}</div></div>
+</div>
+
+<div class="grid xl:grid-cols-2 gap-4 mt-4">
+  <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800">
+    <div class="font-medium mb-2">Трафик по последним точкам</div>
+    <canvas id="traffic"></canvas>
+  </div>
+  <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800">
+    <div class="font-medium mb-2">Динамика задержки</div>
+    <canvas id="latencyMini"></canvas>
+  </div>
+</div>
+
+<script>
+const trend = {{ trend_json | safe }};
+new Chart(document.getElementById('traffic'), {
+  type:'line',
+  data:{labels:trend.map(x=>x.ts), datasets:[{label:'Входящий трафик',data:trend.map(x=>x.in), borderColor:'#4f46e5'},{label:'Исходящий трафик',data:trend.map(x=>x.out), borderColor:'#16a34a'}]},
+  options:{responsive:true, scales:{y:{beginAtZero:true}}}
+});
+new Chart(document.getElementById('latencyMini'), {
+  type:'line',
+  data:{labels:trend.map(x=>x.ts), datasets:[{label:'Задержка, мс',data:trend.map(x=>x.lat), borderColor:'#f59e0b'}]},
+  options:{responsive:true, scales:{y:{beginAtZero:true}}}
+});
+</script>
+{% endblock %}
