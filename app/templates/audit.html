@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+<form method="get" action="/audit" class="grid md:grid-cols-3 gap-2 mb-3">
+  <select name="user_filter" class="p-2 rounded-lg border bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">
+    <option value="">Все пользователи</option>
+    {% for u in users %}
+    <option value="{{ u }}" {% if user_filter==u %}selected{% endif %}>{{ u }}</option>
+    {% endfor %}
+  </select>
+  <select name="action_filter" class="p-2 rounded-lg border bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">
+    <option value="">Все действия</option>
+    {% for a in actions %}
+    <option value="{{ a }}" {% if action_filter==a %}selected{% endif %}>{{ a }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="p-2 rounded-lg bg-indigo-600 text-white">Применить фильтр</button>
+</form>
+<div class="overflow-x-auto rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800">
+<table class="min-w-full text-sm">
+<tr class="border-b border-slate-200 dark:border-slate-800"><th class="p-2 text-left">Время</th><th class="text-left">Пользователь</th><th class="text-left">Действие</th><th class="text-left">Подробности</th></tr>
+{% for l in logs %}<tr class="border-b border-slate-100 dark:border-slate-800"><td class="p-2">{{ l.ts }}</td><td>{{ l.user }}</td><td>{{ l.action }}</td><td>{{ l.details }}</td></tr>{% endfor %}
+</table>
+</div>
+{% endblock %}
