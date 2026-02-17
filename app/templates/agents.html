@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% set title='Agents' %}
+{% block content %}
+<form class="grid md:grid-cols-4 gap-2 mb-3" method="get">
+  <input name="search" placeholder="Search by name" class="p-2 rounded border" />
+  <select name="status" class="p-2 rounded border"><option value="all">All</option><option value="online">Online</option><option value="offline">Offline</option></select>
+  <select name="sort" class="p-2 rounded border"><option value="desc">Last seen ↓</option><option value="asc">Last seen ↑</option></select>
+  <button class="p-2 rounded bg-indigo-600 text-white">Filter</button>
+</form>
+<div class="overflow-x-auto rounded-xl bg-white dark:bg-slate-800 shadow">
+<table class="min-w-full text-sm">
+<tr class="text-left border-b"><th class="p-2">Agent</th><th>Status</th><th>Last seen</th><th>Actions</th></tr>
+{% for a in agents %}
+<tr class="border-b border-slate-200 dark:border-slate-700">
+  <td class="p-2">{{ a.name }}</td><td>{{ a.status }}</td><td>{{ a.last_seen }}</td>
+  <td class="space-x-2 py-2">
+    <form method="post" action="/agents/{{ a.id }}/apply" class="inline">
+      <select name="profile_id" class="border rounded p-1">{% for p in profiles %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}</select>
+      <button onclick="return confirm('Apply profile?')" class="px-2 py-1 rounded bg-emerald-600 text-white">Apply</button>
+    </form>
+    <form method="post" action="/agents/{{ a.id }}/stop" class="inline">
+      <button onclick="return confirm('Stop profile?')" class="px-2 py-1 rounded bg-rose-600 text-white">Stop</button>
+    </form>
+  </td>
+</tr>
+<tr><td colspan="4" class="p-2 text-xs text-slate-500">Last 10 telemetry: {% for t in latest[a.id] %}[{{ t.scenario }} lat={{ t.latency_ms }} err={{ t.errors }}] {% endfor %}</td></tr>
+{% endfor %}
+</table>
+</div>
+{% endblock %}

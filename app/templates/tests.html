@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% set title='Tests' %}
+{% block content %}
+<div class="rounded-xl bg-white dark:bg-slate-800 p-4 shadow"><canvas id="sr"></canvas></div>
+<div class="mt-4 overflow-x-auto rounded-xl bg-white dark:bg-slate-800 shadow">
+<table class="min-w-full text-sm"><tr class="border-b"><th class="p-2">Time</th><th>Run</th><th>Duration</th><th>Checks</th><th>Status</th></tr>
+{% for r in rows %}<tr class="border-b border-slate-200 dark:border-slate-700"><td class="p-2">{{ r.ts }}</td><td>{{ r.run_name }}</td><td>{{ r.duration_ms }} ms</td><td>{{ r.checks }}</td><td>{{ 'PASS' if r.success else 'FAIL' }}</td></tr>{% endfor %}
+</table></div>
+<script>
+const sr={{ success_rate_json|safe }};
+new Chart(sr ? document.getElementById('sr'):null,{type:'line',data:{labels:sr.map(x=>x.day),datasets:[{label:'Success %',data:sr.map(x=>x.rate)}]}})
+</script>
+{% endblock %}
