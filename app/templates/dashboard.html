@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% set title='Dashboard' %}
+{% block content %}
+<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+  <div class="p-4 rounded-xl bg-white dark:bg-slate-800 shadow">Online: <b>{{ summary.online_agents }}/{{ summary.total_agents }}</b></div>
+  <div class="p-4 rounded-xl bg-white dark:bg-slate-800 shadow">Deployments 24h: <b>{{ summary.deployments_24h }}</b></div>
+  <div class="p-4 rounded-xl bg-white dark:bg-slate-800 shadow">Error rate: <b>{{ summary.error_rate }}</b>/1000</div>
+  <div class="p-4 rounded-xl bg-white dark:bg-slate-800 shadow">Avg latency 1h: <b>{{ summary.avg_latency_1h }} ms</b></div>
+</div>
+<div class="grid lg:grid-cols-2 gap-4 mt-4">
+  <div class="p-4 rounded-xl bg-white dark:bg-slate-800 shadow"><canvas id="traffic"></canvas></div>
+  <div class="p-4 rounded-xl bg-white dark:bg-slate-800 shadow"><canvas id="deploy"></canvas></div>
+</div>
+<script>
+const trend = {{ trend_json | safe }};
+new Chart(document.getElementById('traffic'), {type:'line', data:{labels:trend.map(x=>x.ts), datasets:[{label:'in',data:trend.map(x=>x.in)},{label:'out',data:trend.map(x=>x.out)}]}})
+new Chart(document.getElementById('deploy'), {type:'bar', data:{labels:['Deployments'], datasets:[{label:'24h', data:[{{ summary.deployments_24h }}]}]}})
+</script>
+{% endblock %}
