@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<form method="get" class="grid md:grid-cols-3 gap-2 mb-3">
+  <input name="user_filter" value="{{ user_filter }}" class="p-2 rounded-lg border" placeholder="Пользователь" />
+  <input name="action_filter" value="{{ action_filter }}" class="p-2 rounded-lg border" placeholder="Действие (PING/APPLY_PROFILE/STOP_PROFILE)" />
+  <button class="p-2 rounded-lg bg-indigo-600 text-white">Фильтр</button>
+</form>
+<div class="overflow-x-auto rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800">
+<table class="min-w-full text-sm">
+<tr class="border-b border-slate-200 dark:border-slate-800"><th class="p-2 text-left">Время</th><th class="text-left">Пользователь</th><th class="text-left">Действие</th><th class="text-left">Подробности</th></tr>
+{% for l in logs %}<tr class="border-b border-slate-100 dark:border-slate-800"><td class="p-2">{{ l.ts }}</td><td>{{ l.user }}</td><td>{{ l.action }}</td><td>{{ l.details }}</td></tr>{% endfor %}
+</table>
+</div>
+{% endblock %}
