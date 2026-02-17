@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="grid sm:grid-cols-2 xl:grid-cols-5 gap-4">
+  <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800"><div class="text-xs text-slate-500">Доступность</div><div class="text-2xl font-semibold">{{ summary.availability }}%</div></div>
+  <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800"><div class="text-xs text-slate-500">Ошибки / 1000</div><div class="text-2xl font-semibold">{{ summary.error_rate }}</div></div>
+  <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800"><div class="text-xs text-slate-500">Avg latency 24ч</div><div class="text-2xl font-semibold">{{ summary.avg_latency_24h }} мс</div></div>
+  <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800"><div class="text-xs text-slate-500">P95 latency 24ч</div><div class="text-2xl font-semibold">{{ summary.p95_latency_24h }} мс</div></div>
+  <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800"><div class="text-xs text-slate-500">Индекс стабильности</div><div class="text-2xl font-semibold">{{ summary.stability_index }}</div></div>
+</div>
+
+<div class="mt-4 rounded-2xl p-4 bg-indigo-50 dark:bg-slate-900 border border-indigo-100 dark:border-slate-800">
+  <div class="font-semibold mb-2">Пояснения по текущему состоянию</div>
+  <ul class="list-disc pl-5 text-sm space-y-1">
+    {% for note in explanations %}<li>{{ note }}</li>{% endfor %}
+  </ul>
+</div>
+
+<div class="grid xl:grid-cols-2 gap-4 mt-4">
+  <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800"><div class="font-medium mb-2">Трафик по времени</div><canvas id="c1"></canvas></div>
+  <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800"><div class="font-medium mb-2">Средняя задержка</div><canvas id="c2"></canvas></div>
+  <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800"><div class="font-medium mb-2">Типы действий за 24ч</div><canvas id="c3"></canvas></div>
+  <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800"><div class="font-medium mb-2">Распределение профилей</div><canvas id="c4"></canvas></div>
+  <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800 xl:col-span-2"><div class="font-medium mb-2">Агенты с наибольшим числом ошибок</div><canvas id="c5"></canvas></div>
+</div>
+
+<div class="mt-4 flex flex-wrap gap-2">
+  <a href="/api/telemetry/export.csv?range=24h" class="px-3 py-2 rounded-lg bg-emerald-600 text-white">Экспорт CSV (24ч)</a>
+  <a href="/api/telemetry/export.csv?range=7d" class="px-3 py-2 rounded-lg bg-slate-800 text-white">Экспорт CSV (7д)</a>
+</div>
+
+<div class="mt-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800 overflow-x-auto">
+<table class="min-w-full text-sm"><tr class="border-b border-slate-200 dark:border-slate-800"><th class="p-2 text-left">Время</th><th class="p-2 text-left">Тип</th><th class="p-2 text-left">Описание</th></tr>
+{% for e in events %}<tr class="border-b border-slate-100 dark:border-slate-800"><td class="p-2">{{ e.ts }}</td><td>{{ e.type }}</td><td>{{ e.details }}</td></tr>{% endfor %}
+</table></div>
+
+<script>
+async function draw(){
+ const traffic=await fetch('/api/metrics/traffic?range=1h').then(r=>r.json());
+ new Chart(c1,{type:'line',data:{labels:traffic.labels,datasets:[{label:'Входящий',data:traffic.bytes_in,borderColor:'#4f46e5'},{label:'Исходящий',data:traffic.bytes_out,borderColor:'#16a34a'}]}})
+ const lat=await fetch('/api/metrics/latency?range=24h').then(r=>r.json());
+ new Chart(c2,{type:'line',data:{labels:lat.labels,datasets:[{label:'Задержка, мс',data:lat.latency,borderColor:'#f59e0b'}]}})
+ const actions=await fetch('/api/metrics/actions?range=24h').then(r=>r.json());
+ new Chart(c3,{type:'bar',data:{labels:actions.labels,datasets:[{data:actions.values,label:'Количество'}]}})
+ const prof=await fetch('/api/metrics/profile_distribution?range=7d').then(r=>r.json());
+ new Chart(c4,{type:'pie',data:{labels:prof.labels,datasets:[{data:prof.values}]}})
+ const errors=await fetch('/api/metrics/top_errors?range=24h').then(r=>r.json());
+ new Chart(c5,{type:'bar',data:{labels:errors.labels,datasets:[{data:errors.values,label:'Ошибки'}]}})
+}
+draw()
+</script>
+{% endblock %}

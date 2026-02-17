@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+<form class="grid md:grid-cols-4 gap-2 mb-3" method="get" action="/agents">
+  <input name="search" value="{{ search }}" placeholder="Поиск по имени" class="p-2 rounded-lg border bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100" />
+  <select name="status" class="p-2 rounded-lg border bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">
+    <option value="all" {% if status=='all' %}selected{% endif %}>Все</option>
+    <option value="online" {% if status=='online' %}selected{% endif %}>Онлайн</option>
+    <option value="offline" {% if status=='offline' %}selected{% endif %}>Офлайн</option>
+  </select>
+  <select name="sort" class="p-2 rounded-lg border bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">
+    <option value="desc" {% if sort=='desc' %}selected{% endif %}>Последняя активность ↓</option>
+    <option value="asc" {% if sort=='asc' %}selected{% endif %}>Последняя активность ↑</option>
+  </select>
+  <input type="hidden" name="user" value="{{ active_user }}" />
+  <button type="submit" class="p-2 rounded-lg bg-indigo-600 text-white">Применить фильтр</button>
+</form>
+<div class="overflow-x-auto rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800">
+<table class="min-w-full text-sm">
+<tr class="text-left border-b border-slate-200 dark:border-slate-800"><th class="p-2">Агент</th><th>Статус</th><th>Последний сигнал</th><th>Действия</th></tr>
+{% for a in agents %}
+<tr class="border-b border-slate-100 dark:border-slate-800">
+  <td class="p-2 font-medium">{{ a.name }}</td>
+  <td>{% if a.status=='online' %}<span class="px-2 py-1 rounded bg-emerald-100 text-emerald-700">online</span>{% else %}<span class="px-2 py-1 rounded bg-slate-200 text-slate-700">offline</span>{% endif %}</td>
+  <td>{{ a.last_seen }}</td>
+  <td class="space-x-2 py-2">
+    <form method="post" action="/agents/{{ a.id }}/apply" class="inline-flex items-center gap-1">
+      <select name="profile_id" class="border rounded p-1 bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">
+        {% for p in profiles %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}
+      </select>
+      <input type="hidden" name="user" value="{{ active_user }}" />
+      <button type="submit" onclick="return confirm('Применить профиль к агенту?')" class="px-2 py-1 rounded bg-emerald-600 text-white">Применить</button>
+    </form>
+    <form method="post" action="/agents/{{ a.id }}/stop" class="inline">
+      <input type="hidden" name="user" value="{{ active_user }}" />
+      <button type="submit" onclick="return confirm('Остановить профиль у агента?')" class="px-2 py-1 rounded bg-rose-600 text-white">Остановить</button>
+    </form>
+  </td>
+</tr>
+<tr><td colspan="4" class="p-2 text-xs text-slate-500">Последние 10 метрик: {% for t in latest[a.id] %}[{{ t.scenario }} | {{ t.latency_ms }}мс | err={{ t.errors }}] {% endfor %}</td></tr>
+{% endfor %}
+</table>
+</div>
+{% endblock %}
