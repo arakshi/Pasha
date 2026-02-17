@@ -1,0 +1,51 @@
+# Панель управления
+
+Веб-приложение на FastAPI + SQLModel + Jinja2/HTMX/Alpine + Chart.js.
+Интерфейс полностью на русском, данные генерируются синтетически и имитируют реальную эксплуатационную нагрузку.
+
+
+## Запуск
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+Откройте: http://127.0.0.1:8000
+
+## Запуск в PyCharm
+
+1. Откройте корень проекта в PyCharm.
+2. Настройте интерпретатор и установите зависимости: `pip install -r requirements.txt`.
+3. Запускайте файл `app/main.py` как Python Script.
+4. После старта откройте `http://127.0.0.1:8000`.
+
+## Страницы
+
+- `/dashboard` — ключевые KPI, тренды трафика и задержки.
+- `/agents` — поиск/фильтры по агентам, применение и остановка профилей, последние метрики по каждому агенту.
+- `/profiles` — справочник профилей нагрузки.
+- `/audit` — журнал действий пользователей с фильтрацией.
+- `/analytics` — расширенная аналитика, пояснения по состоянию системы, экспорт CSV.
+- `/tests` — история тестовых прогонов, статус проверок, график процента успеха по дням.
+
+## API аналитики
+
+- `GET /api/metrics/kpi?range=1h|24h|7d`
+- `GET /api/metrics/traffic?range=1h|24h`
+- `GET /api/metrics/latency?range=1h|24h`
+- `GET /api/metrics/actions?range=24h`
+- `GET /api/metrics/profile_distribution?range=7d`
+- `GET /api/metrics/top_errors?range=24h`
+- `GET /api/telemetry/export.csv?range=24h|1h|7d`
+
+## Наполнение при первом запуске
+
+- 3 пользователя (`admin`, `operator`, `viewer`)
+- 8 агентов в разных регионах
+- 6 профилей с разными характеристиками
+- телеметрия за последние 12 часов с суточными/часовыми колебаниями
+- история аудита за 72 часа
+- расширенная история тестовых прогонов за 35 дней
