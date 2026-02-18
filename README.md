@@ -28,7 +28,7 @@ uvicorn app.main:app --reload
 - `/agents` — поиск/фильтры по агентам, применение и остановка профилей, добавление/удаление агентов, последние метрики по каждому агенту.
 - `/profiles` — справочник профилей нагрузки.
 - `/audit` — журнал действий пользователей с фильтрацией.
-- `/analytics` — расширенная аналитика, пояснения по состоянию системы, экспорт CSV.
+- `/analytics` — расширенная аналитика, фильтр режима туннеля (all/vless/none), графики качества/handshake симулированного туннеля, экспорт CSV.
 - `/tests` — история тестовых прогонов, статус проверок, график процента успеха по дням.
 
 ## API аналитики
@@ -39,6 +39,8 @@ uvicorn app.main:app --reload
 - `GET /api/metrics/actions?range=24h`
 - `GET /api/metrics/profile_distribution?range=7d`
 - `GET /api/metrics/top_errors?range=24h`
+- `GET /api/metrics/tunnel_quality?range=24h`
+- `GET /api/metrics/tunnel_handshake?range=24h`
 - `GET /api/telemetry/export.csv?range=24h|1h|7d`
 
 ## Наполнение при первом запуске

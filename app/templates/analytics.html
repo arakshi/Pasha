@@ -8,6 +8,17 @@
   <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800"><div class="text-xs text-slate-500">Индекс стабильности</div><div class="text-2xl font-semibold">{{ summary.stability_index }}</div></div>
 </div>
 
+<form method="get" action="/analytics" class="mt-4 flex flex-wrap gap-2 items-center">
+  <input type="hidden" name="user" value="{{ active_user }}" />
+  <label class="text-sm text-slate-500">Режим туннеля:</label>
+  <select name="mode_filter" class="p-2 rounded-lg border bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">
+    <option value="all" {% if mode_filter=='all' %}selected{% endif %}>Все</option>
+    <option value="vless_simulated" {% if mode_filter=='vless_simulated' %}selected{% endif %}>Только VLESS (симуляция)</option>
+    <option value="none" {% if mode_filter=='none' %}selected{% endif %}>Без туннеля</option>
+  </select>
+  <button class="px-3 py-2 rounded-lg bg-indigo-600 text-white">Применить</button>
+</form>
+
 <div class="mt-4 rounded-2xl p-4 bg-indigo-50 dark:bg-slate-900 border border-indigo-100 dark:border-slate-800">
   <div class="font-semibold mb-2">Пояснения по текущему состоянию</div>
   <ul class="list-disc pl-5 text-sm space-y-1">
@@ -20,6 +31,8 @@
   <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800"><div class="font-medium mb-2">Средняя задержка</div><canvas id="c2"></canvas></div>
   <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800"><div class="font-medium mb-2">Типы действий за 24ч</div><canvas id="c3"></canvas></div>
   <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800"><div class="font-medium mb-2">Распределение профилей</div><canvas id="c4"></canvas></div>
+  <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800"><div class="font-medium mb-2">Качество VLESS-туннеля (симуляция)</div><canvas id="c6"></canvas></div>
+  <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800"><div class="font-medium mb-2">Handshake VLESS (симуляция)</div><canvas id="c7"></canvas></div>
   <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800 xl:col-span-2"><div class="font-medium mb-2">Агенты с наибольшим числом ошибок</div><canvas id="c5"></canvas></div>
 </div>
 
@@ -43,6 +56,10 @@ async function draw(){
  new Chart(c3,{type:'bar',data:{labels:actions.labels,datasets:[{data:actions.values,label:'Количество'}]}})
  const prof=await fetch('/api/metrics/profile_distribution?range=7d').then(r=>r.json());
  new Chart(c4,{type:'pie',data:{labels:prof.labels,datasets:[{data:prof.values}]}})
+ const tQuality=await fetch('/api/metrics/tunnel_quality?range=24h').then(r=>r.json());
+ new Chart(c6,{type:'line',data:{labels:tQuality.labels,datasets:[{label:'Качество',data:tQuality.quality,borderColor:'#6366f1'}]}})
+ const tHs=await fetch('/api/metrics/tunnel_handshake?range=24h').then(r=>r.json());
+ new Chart(c7,{type:'line',data:{labels:tHs.labels,datasets:[{label:'Handshake, мс',data:tHs.handshake,borderColor:'#e11d48'}]}})
  const errors=await fetch('/api/metrics/top_errors?range=24h').then(r=>r.json());
  new Chart(c5,{type:'bar',data:{labels:errors.labels,datasets:[{data:errors.values,label:'Ошибки'}]}})
 }

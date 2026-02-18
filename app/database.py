@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import random
 
+from sqlalchemy import text
 from sqlmodel import Session, SQLModel, create_engine, select
 
 from app.models import Agent, AuditLog, Profile, Telemetry, TestRun, User
@@ -25,8 +26,30 @@ def _agent_baseline(agent_name: str) -> tuple[int, int, int]:
     return (46_000, 44_000, 95)
 
 
+def _ensure_telemetry_columns() -> None:
+    required = {
+        "tunnel_mode": "TEXT DEFAULT 'none'",
+        "handshake_ms": "INTEGER",
+        "jitter_ms": "INTEGER",
+        "route_hops": "INTEGER",
+        "packet_loss_pct": "REAL",
+    }
+    with engine.begin() as conn:
+        rows = conn.execute(text("PRAGMA table_info('telemetry')")).fetchall()
+        existing = {r[1] for r in rows}
+        for col, col_type in required.items():
+            if col not in existing:
+                conn.execute(text(f"ALTER TABLE telemetry ADD COLUMN {col} {col_type}"))
+
+
+def _is_vless_profile(name: str) -> bool:
+    return "vless" in name.lower()
+
+
 def init_db() -> None:
     SQLModel.metadata.create_all(engine)
+    _ensure_telemetry_columns()
+
     with Session(engine) as session:
         if session.exec(select(User)).first():
             return
@@ -88,6 +111,12 @@ def init_db() -> None:
                 error_probability = 0.016 * profile.error_factor
                 errors = random.randint(1, 3) if random.random() < error_probability else 0
 
+                tunnel_mode = "vless_simulated" if _is_vless_profile(profile.name) else "none"
+                handshake = random.randint(18, 60) if tunnel_mode == "vless_simulated" else None
+                jitter = random.randint(2, 16) if tunnel_mode == "vless_simulated" else random.randint(1, 8)
+                hops = random.randint(4, 11) if tunnel_mode == "vless_simulated" else random.randint(2, 8)
+                loss = round(random.uniform(0.1, 1.6), 2) if tunnel_mode == "vless_simulated" else round(random.uniform(0.0, 0.5), 2)
+
                 session.add(
                     Telemetry(
                         ts=ts,
@@ -97,7 +126,12 @@ def init_db() -> None:
                         latency_ms=latency,
                         errors=errors,
                         profile_id=profile.id,
-                        scenario="heartbeat",
+                        scenario="vless_simulated_tunnel" if tunnel_mode == "vless_simulated" else "heartbeat",
+                        tunnel_mode=tunnel_mode,
+                        handshake_ms=handshake,
+                        jitter_ms=jitter,
+                        route_hops=hops,
+                        packet_loss_pct=loss,
                     )
                 )
 
@@ -116,7 +150,7 @@ def init_db() -> None:
                     action=action,
                     agent_id=agent.id,
                     profile_id=profile.id if action != "PING" else None,
-                    details=f"Событие: {action.lower()} | агент: {agent.name}",
+                    details=f"Событие: {action.lower()} | агент: {agent.name} | режим: {'vless_simulated' if _is_vless_profile(profile.name) else 'standard'}",
                 )
             )
 

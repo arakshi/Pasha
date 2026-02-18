@@ -53,6 +53,18 @@ def get_top_errors(range: str = Query("24h")):
         return metrics.top_errors_24h(session)
 
 
+@router.get("/api/metrics/tunnel_quality")
+def get_tunnel_quality(range: str = Query("24h")):
+    with Session(engine) as session:
+        return metrics.tunnel_quality_timeseries(session, range)
+
+
+@router.get("/api/metrics/tunnel_handshake")
+def get_tunnel_handshake(range: str = Query("24h")):
+    with Session(engine) as session:
+        return metrics.tunnel_handshake_timeseries(session, range)
+
+
 @router.get("/api/telemetry/export.csv")
 def export_telemetry(range: str = Query("24h")):
     now = datetime.utcnow()
@@ -68,9 +80,9 @@ def export_telemetry(range: str = Query("24h")):
 
     stream = io.StringIO()
     writer = csv.writer(stream)
-    writer.writerow(["id", "ts", "agent_id", "bytes_in", "bytes_out", "latency_ms", "errors", "profile_id", "scenario"])
+    writer.writerow(["id", "ts", "agent_id", "bytes_in", "bytes_out", "latency_ms", "errors", "profile_id", "scenario", "tunnel_mode", "handshake_ms", "jitter_ms", "route_hops", "packet_loss_pct"])
     for r in rows:
-        writer.writerow([r.id, r.ts.isoformat(), r.agent_id, r.bytes_in, r.bytes_out, r.latency_ms, r.errors, r.profile_id, r.scenario])
+        writer.writerow([r.id, r.ts.isoformat(), r.agent_id, r.bytes_in, r.bytes_out, r.latency_ms, r.errors, r.profile_id, r.scenario, r.tunnel_mode, r.handshake_ms, r.jitter_ms, r.route_hops, r.packet_loss_pct])
     stream.seek(0)
 
     return StreamingResponse(

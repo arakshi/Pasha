@@ -145,3 +145,34 @@ def top_errors_24h(session: Session) -> dict[str, Any]:
         "labels": [agent_map.get(a, f"agent_{a}") for a, _ in sorted_items],
         "values": [v for _, v in sorted_items],
     }
+
+
+def tunnel_quality_timeseries(session: Session, range_name: str) -> dict[str, list[Any]]:
+    start = _start_for_range(range_name)
+    rows = session.exec(
+        select(Telemetry).where(Telemetry.ts >= start, Telemetry.tunnel_mode == "vless_simulated")
+    ).all()
+    grouped: dict[str, list[float]] = defaultdict(list)
+    for row in rows:
+        key = row.ts.strftime("%d.%m %H:%M")
+        loss = row.packet_loss_pct or 0
+        jitter = row.jitter_ms or 0
+        quality = max(0.0, min(100.0, 100 - (loss * 15) - (jitter * 0.9) - (row.latency_ms * 0.06)))
+        grouped[key].append(quality)
+    labels = sorted(grouped.keys())
+    return {"labels": labels, "quality": [round(sum(grouped[k]) / len(grouped[k]), 2) for k in labels]}
+
+
+def tunnel_handshake_timeseries(session: Session, range_name: str) -> dict[str, list[Any]]:
+    start = _start_for_range(range_name)
+    rows = session.exec(
+        select(Telemetry).where(Telemetry.ts >= start, Telemetry.tunnel_mode == "vless_simulated")
+    ).all()
+    grouped: dict[str, list[int]] = defaultdict(list)
+    for row in rows:
+        if row.handshake_ms is None:
+            continue
+        key = row.ts.strftime("%d.%m %H:%M")
+        grouped[key].append(row.handshake_ms)
+    labels = sorted(grouped.keys())
+    return {"labels": labels, "handshake": [round(sum(grouped[k]) / len(grouped[k]), 2) for k in labels]}

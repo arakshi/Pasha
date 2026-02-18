@@ -204,25 +204,31 @@ def audit_page(request: Request, user_filter: str = "", action_filter: str = "",
 
 
 @router.get("/analytics", response_class=HTMLResponse)
-def analytics_page(request: Request, user: str | None = None):
+def analytics_page(request: Request, user: str | None = None, mode_filter: str = "all"):
+
     cu = current_user(user)
     if cu.role not in {"viewer", "operator", "admin"}:
         return HTMLResponse("Доступ запрещён", status_code=403)
 
+    normalized_mode = mode_filter if mode_filter in {"all", "vless_simulated", "none"} else "all"
+
     with Session(engine) as session:
         recent_audit = session.exec(select(AuditLog).order_by(AuditLog.ts.desc()).limit(35)).all()
-        recent_t = session.exec(select(Telemetry).order_by(Telemetry.ts.desc()).limit(35)).all()
+        telemetry_query = select(Telemetry).order_by(Telemetry.ts.desc())
+        if normalized_mode != "all":
+            telemetry_query = telemetry_query.where(Telemetry.tunnel_mode == normalized_mode)
+        recent_t = session.exec(telemetry_query.limit(35)).all()
         summary = kpi(session, "24h")
 
     events = sorted(
         [{"ts": x.ts, "type": x.action, "details": x.details} for x in recent_audit]
-        + [{"ts": x.ts, "type": x.scenario, "details": f"Агент={x.agent_id}, задержка={x.latency_ms} мс, ошибки={x.errors}"} for x in recent_t],
+        + [{"ts": x.ts, "type": x.scenario, "details": f"Агент={x.agent_id}, режим={x.tunnel_mode}, handshake={x.handshake_ms}мс, jitter={x.jitter_ms}мс, потери={x.packet_loss_pct}%"} for x in recent_t],
         key=lambda item: item["ts"],
         reverse=True,
     )[:50]
 
     context = _base_context("analytics", cu)
-    context.update({"summary": summary, "events": events, "explanations": _analytics_explanations(summary)})
+    context.update({"summary": summary, "events": events, "explanations": _analytics_explanations(summary), "mode_filter": normalized_mode})
     return templates.TemplateResponse(request, "analytics.html", context)
 
 

@@ -48,6 +48,11 @@ class Telemetry(SQLModel, table=True):
     errors: int
     profile_id: Optional[int] = Field(default=None, foreign_key="profile.id")
     scenario: str = Field(default="heartbeat", index=True)
+    tunnel_mode: str = Field(default="none", index=True)
+    handshake_ms: Optional[int] = None
+    jitter_ms: Optional[int] = None
+    route_hops: Optional[int] = None
+    packet_loss_pct: Optional[float] = None
 
 
 class TestRun(SQLModel, table=True):

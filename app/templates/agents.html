@@ -58,7 +58,7 @@
     </form>
   </td>
 </tr>
-<tr><td colspan="4" class="p-2 text-xs text-slate-500">Последние 10 метрик: {% for t in latest[a.id] %}[{{ t.scenario }} | {{ t.latency_ms }}мс | err={{ t.errors }}] {% endfor %}</td></tr>
+<tr><td colspan="4" class="p-2 text-xs text-slate-500">Последние 10 метрик: {% for t in latest[a.id] %}[{{ t.scenario }} | mode={{ t.tunnel_mode }} | hs={{ t.handshake_ms }}мс | jit={{ t.jitter_ms }}мс | loss={{ t.packet_loss_pct }}% | lat={{ t.latency_ms }}мс | err={{ t.errors }}] {% endfor %}</td></tr>
 {% endfor %}
 </table>
 </div>
